@@ -3098,6 +3098,119 @@ npm run serve:ssr
 
 ---
 
+
+## 🚀 Production Deployment Tips
+
+### 1. **Environment Variables**
+- Set up proper environment variables for production
+- Configure Google Cloud credentials securely
+
+### 2. **Build Optimization**
+```bash
+ng build --configuration production
+```
+
+### 3. **Docker Deployment**
+Create `Dockerfile`:
+```dockerfile
+FROM node:22-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist/ ./dist/
+EXPOSE 4000
+CMD ["node", "dist/smart-grocery-assistant/server/server.mjs"]
+```
+
+---
+
+## 🔗 Additional Resources
+
+- [Angular 20 Documentation](https://angular.dev)
+- [Google Genkit Documentation](https://genkit.dev)  
+- [Vertex AI Documentation](https://cloud.google.com/vertex-ai/docs)
+- [Source Code Repository](https://github.com/your-username/smart-grocery-assistant)
+
+---
+
+## 📋 Understanding the Complete Flow
+
+Now that you've built the application, let's understand how everything works together:
+
+### 1. Application Initialization
+
+![Application Initialization](assets/images/application-initialization.png)
+
+**What happens:**
+- Angular bootstraps using the new zoneless change detection
+- Services are injected using the modern `inject()` function
+- Signals are initialized with default states
+- `httpResource()` is set up to handle API calls reactively
+- Any saved grocery list is loaded from localStorage
+- Initial UI renders with Angular 20's new control flow
+
+### 2. User Interaction Lifecycle
+
+![User Interaction Lifecycle](assets/images/user-interaction-lifecycle.png)
+
+**Key Benefits of Angular 20 Approach:**
+- **Reactive by Default**: Changes propagate automatically through signals
+- **Performance Optimized**: OnPush change detection + zoneless = faster rendering
+- **Type Safe**: Full TypeScript support with proper typing
+- **Declarative**: Template logic is clear with `@if` and `@for`
+
+### 3. AI Integration Deep Dive
+
+The AI integration showcases modern async patterns:
+
+```typescript
+// Traditional Approach (Angular 17 and below)
+ngOnInit() {
+  this.loading = true;
+  this.http.post('/api/suggestions', data)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (data) => {
+        this.suggestions = data;
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = error;
+        this.loading = false;
+      }
+    });
+}
+
+// Angular 20 Approach
+private apiRequest = signal<{ items: GroceryItem[] } | null>(null);
+private suggestionResource = httpResource(() => {
+  const request = this.apiRequest();
+  return request ? { url: '/api/suggestions', method: 'POST', body: request } : undefined;
+});
+
+readonly suggestions = this.suggestionResource.value;
+readonly isLoading = this.suggestionResource.isLoading;
+readonly error = this.suggestionResource.error;
+```
+
+**Why Angular 20 is Better:**
+- **Less Boilerplate**: No manual subscription management
+- **Automatic Cleanup**: No need for `takeUntil` or `ngOnDestroy`
+- **Reactive State**: Loading, error, and data states are automatically managed
+- **Request Deduplication**: Built-in request cancellation and deduplication
+
+### 4. Data Persistence Strategy
+
+![Data Persistence Strategy](assets/images/data-persistence-strategy.png)
+
+This pattern ensures that:
+- Data persists across browser sessions
+- No external database needed for the demo
+- Instant loading when returning to the app
+- Seamless offline functionality
+
+---
+
 ## 🎯 Key Angular 20 Features Demonstrated
 
 ### 1. **Signals for State Management**
@@ -3195,147 +3308,216 @@ constructor() {
 
 ---
 
-## 🚀 Production Deployment Tips
+## 🚀 Deploying to Cloudways
 
-### 1. **Environment Variables**
-- Set up proper environment variables for production
-- Configure Google Cloud credentials securely
+Now that we've built our Smart Grocery Assistant, let's deploy it to Cloudways for production hosting. Cloudways provides managed cloud hosting that makes deployment simple and scalable.
 
-### 2. **Build Optimization**
+### Step 1: Sign Up for Cloudways
+
+First, create your Cloudways account using this link to get started:
+[Sign Up for Cloudways](https://unified.cloudways.com/signup?id=1879418&coupon=AHSANDEV20)
+
+### Step 2: Create a New Server
+
+1. Once logged in, click **"My Servers"** from the left menu
+2. Click **"Create New Server"**
+3. Choose **Digital Ocean** as your cloud provider
+4. Select **Standard 1GB** server (perfect for testing our application)
+5. Choose a location (we'll use Frankfurt for this example)
+6. Give your server a descriptive name
+7. Assign it to a project (or create a new project)
+8. Click **"Launch Server"**
+
+> ⏰ **Wait Time**: Server creation takes about 7 minutes. Perfect time to grab a coffee!
+
+### Step 3: Prepare Your Google Cloud Credentials
+
+While the server is being created, let's prepare our AI service credentials:
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Navigate to your project
+3. Go to **IAM & Admin** > **Service Accounts**
+4. Create a new service account with Vertex AI permissions
+5. Download the service account JSON file
+6. Rename it to `service-account.json` and place it in your project root
+7. Make sure it's added to your `.gitignore` file
+
+### Step 4: Set Up Git Integration
+
+Once your Cloudways server is ready:
+
+1. In Cloudways, go to your server's **"Deployment via Git"** section
+2. Copy the SSH key provided by Cloudways
+3. Add this SSH key to your GitHub account:
+   - Go to GitHub Settings > SSH and GPG keys
+   - Add the Cloudways SSH key
+4. Back in Cloudways, enter your repository URL
+5. Select the branch you want to deploy (usually `main`)
+6. Click **"Deploy"** to pull your code
+
+### Step 5: SSH Into Your Server
+
+1. In Cloudways, go to **"Server Management"** > **"Master Credentials"**
+2. Use the provided SSH access details to connect to your server
+3. Your application code will be in: `~/applications/APP_NAME/public_html`
+
+### Step 6: Install Node.js and PM2
+
+SSH into your server and run these commands:
+
 ```bash
-ng build --configuration production
+# Ask the AI Copilot in Cloudways for the latest commands, or use these:
+
+# Install NVM (Node Version Manager)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+source ~/.bashrc
+
+# Install and use Node.js LTS
+nvm install --lts
+nvm use --lts
+
+# Install PM2 globally
+npm install -g pm2
 ```
 
-### 3. **Docker Deployment**
-Create `Dockerfile`:
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist/ ./dist/
-EXPOSE 4000
-CMD ["node", "dist/smart-grocery-assistant/server/server.mjs"]
+### Step 7: Create PM2 Configuration
+
+In your project root, create `ecosystem.config.js`:
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: "smart-grocery-assistant",
+      script: "dist/smart-grocery-assistant/server/server.mjs",
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "1G",
+      env: {
+        PM2: true,
+      },
+    },
+  ],
+};
 ```
 
----
+### Step 8: Update Server Configuration
 
-## 🎬 Video Recording Tips
-
-### For YouTube Content Creation:
-
-1. **Introduction (2-3 minutes)**
-   - Show final app demo
-   - Highlight Angular 20 features we'll use
-   - Mention AI integration with Genkit
-
-2. **Setup Phase (5-7 minutes)**
-   - Live coding the project setup
-   - Installing dependencies
-   - Explaining environment configuration
-
-3. **Core Development (30-40 minutes)**
-   - Build services with signals
-   - Create components with new control flow
-   - Integrate AI with Genkit
-   - Demonstrate request cancellation
-
-4. **Testing & Demo (5-8 minutes)**
-   - Build and run the application
-   - Show AI suggestions in action
-   - Demonstrate rapid interactions
-
-5. **Wrap-up (2-3 minutes)**
-   - Summarize Angular 20 features used
-   - Show deployment options
-   - Call to action
-
----
-
-## 🔗 Additional Resources
-
-- [Angular 20 Documentation](https://angular.dev)
-- [Google Genkit Documentation](https://genkit.dev)  
-- [Vertex AI Documentation](https://cloud.google.com/vertex-ai/docs)
-- [Source Code Repository](https://github.com/your-username/smart-grocery-assistant)
-
----
-
-## 📋 Understanding the Complete Flow
-
-Now that you've built the application, let's understand how everything works together:
-
-### 1. Application Initialization
-
-![Application Initialization](assets/images/application-initialization.png)
-
-**What happens:**
-- Angular bootstraps using the new zoneless change detection
-- Services are injected using the modern `inject()` function
-- Signals are initialized with default states
-- `httpResource()` is set up to handle API calls reactively
-- Any saved grocery list is loaded from localStorage
-- Initial UI renders with Angular 20's new control flow
-
-### 2. User Interaction Lifecycle
-
-![User Interaction Lifecycle](assets/images/user-interaction-lifecycle.png)
-
-**Key Benefits of Angular 20 Approach:**
-- **Reactive by Default**: Changes propagate automatically through signals
-- **Performance Optimized**: OnPush change detection + zoneless = faster rendering
-- **Type Safe**: Full TypeScript support with proper typing
-- **Declarative**: Template logic is clear with `@if` and `@for`
-
-### 3. AI Integration Deep Dive
-
-The AI integration showcases modern async patterns:
+Update your `src/server.ts` to work with PM2:
 
 ```typescript
-// Traditional Approach (Angular 17 and below)
-ngOnInit() {
-  this.loading = true;
-  this.http.post('/api/suggestions', data)
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (data) => {
-        this.suggestions = data;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = error;
-        this.loading = false;
-      }
-    });
+/**
+ * Start the server if this module is the main entry point.
+ */
+if (isMainModule(import.meta.url) || process.env["PM2"] === "true") {
+  const port = process.env["PORT"] || 4000;
+  app.listen(port, () => {
+    console.log(`Node Express server listening on http://localhost:${port}`);
+  });
 }
-
-// Angular 20 Approach
-private apiRequest = signal<{ items: GroceryItem[] } | null>(null);
-private suggestionResource = httpResource(() => {
-  const request = this.apiRequest();
-  return request ? { url: '/api/suggestions', method: 'POST', body: request } : undefined;
-});
-
-readonly suggestions = this.suggestionResource.value;
-readonly isLoading = this.suggestionResource.isLoading;
-readonly error = this.suggestionResource.error;
 ```
 
-**Why Angular 20 is Better:**
-- **Less Boilerplate**: No manual subscription management
-- **Automatic Cleanup**: No need for `takeUntil` or `ngOnDestroy`
-- **Reactive State**: Loading, error, and data states are automatically managed
-- **Request Deduplication**: Built-in request cancellation and deduplication
+### Step 9: Create Deployment Script
 
-### 4. Data Persistence Strategy
+Create `deploy.sh` in your project root:
 
-![Data Persistence Strategy](assets/images/data-persistence-strategy.png)
+```bash
+#!/bin/bash
 
-This pattern ensures that:
-- Data persists across browser sessions
-- No external database needed for the demo
-- Instant loading when returning to the app
-- Seamless offline functionality
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+echo "Starting deployment process..."
+
+# 1. Install dependencies
+echo "Running npm install..."
+npm install
+
+# 2. Build the application
+echo "Building the application..."
+npm run build
+
+echo "Copying environment files..."
+cp .env dist/smart-grocery-assistant/server/
+cp service-account.json dist/smart-grocery-assistant/server/
+
+# 3. Deploy with pm2
+echo "Stopping and deleting existing 'smart-grocery-assistant' pm2 process..."
+pm2 stop smart-grocery-assistant || true   # Continue even if stop fails
+pm2 delete smart-grocery-assistant || true # Continue even if delete fails
+
+echo "Starting application with pm2..."
+pm2 start ./ecosystem.config.js
+
+echo "Verifying application process..."
+pm2 describe smart-grocery-assistant
+
+echo "Deployment script finished."
+
+exit 0
+```
+
+Make the script executable:
+```bash
+chmod +x deploy.sh
+```
+
+### Step 10: Deploy Your Application
+
+1. **Copy Environment Files**: SSH into your server and create:
+   - `.env` file with your environment variables
+   - `service-account.json` with your Google Cloud credentials
+
+2. **Navigate to Your App Directory**:
+   ```bash
+   cd ~/applications/APP_NAME/public_html
+   ```
+
+3. **Pull Latest Code**:
+   ```bash
+   git pull origin main
+   ```
+
+4. **Run Deployment**:
+   ```bash
+   ./deploy.sh
+   ```
+
+### Step 11: Configure Cloudways Application
+
+1. In Cloudways, go to **"Application Settings"**
+2. Set the **Application URL** to your domain
+3. Configure **HTTPS/SSL** (Cloudways provides free SSL)
+4. Set up any custom domain if needed
+
+### Step 12: Test Your Deployed App
+
+1. Visit your Cloudways application URL
+2. Test the AI suggestions functionality
+3. Check that all features work correctly in production
+4. Monitor server performance in the Cloudways dashboard
+
+### 🎯 Deployment Success!
+
+Your Smart Grocery Assistant is now live on Cloudways! The deployment includes:
+
+- ✅ **Automatic Process Management**: PM2 keeps your app running
+- ✅ **Zero Downtime Deployments**: Easy updates without downtime  
+- ✅ **Managed Infrastructure**: Cloudways handles server maintenance
+- ✅ **SSL Certificates**: Secure HTTPS connections
+- ✅ **Performance Monitoring**: Built-in server monitoring tools
+
+### 🔄 Future Deployments
+
+For subsequent updates:
+
+1. Push changes to your Git repository
+2. SSH into your Cloudways server
+3. Pull the latest code: `git pull origin main`
+4. Run the deployment script: `./deploy.sh`
+
+Your application will be updated with zero downtime!
 
 ---
 
