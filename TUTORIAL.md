@@ -3474,12 +3474,26 @@ chmod +x deploy.sh
    cd ~/applications/APP_NAME/public_html
    ```
 
-3. **Pull Latest Code**:
+3. **Create .htaccess File**: Create a `.htaccess` file in the `public_html` directory to route traffic to your Node.js server:
+   ```bash
+   nano .htaccess
+   ```
+   
+   Add this content:
+   ```apache
+   DirectoryIndex disabled
+   
+   RewriteEngine On
+   RewriteBase /
+   RewriteRule ^(.*)?$ http://127.0.0.1:4000/$1 [P,L]
+   ```
+
+4. **Pull Latest Code**:
    ```bash
    git pull origin main
    ```
 
-4. **Run Deployment**:
+5. **Run Deployment**:
    ```bash
    ./deploy.sh
    ```
