@@ -31,9 +31,9 @@ This repository serves as the companion guide for the YouTube tutorial series. F
 
 ## 📋 Prerequisites
 
-- Node.js 18+ installed
+- Node.js 22+ installed (LTS recommended)
 - Basic understanding of TypeScript and Angular
-- Google Cloud account (optional, for full AI features)
+- Google Cloud account (required for full AI features)
 
 ## 🏁 Final Result
 
