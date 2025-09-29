@@ -26,6 +26,9 @@ The tutorial covers everything from project setup to deployment, including:
 
 This repository serves as the companion guide for the YouTube tutorial series. Follow along with the comprehensive markdown tutorial while watching the video implementation.
 
+[![Watch the tutorial on YouTube](https://img.youtube.com/vi/OTlnvCpOp00/0.jpg)](https://youtu.be/OTlnvCpOp00?si=HzmhVY-gD6NhKdH7)
+
+
 ## 📋 Prerequisites
 
 - Node.js 18+ installed

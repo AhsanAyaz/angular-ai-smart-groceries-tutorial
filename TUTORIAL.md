@@ -11,7 +11,7 @@
 
 ## 📋 Prerequisites
 
-- Node.js 18+ installed
+- Node.js 22+ installed (LTS recommended)
 - Basic understanding of TypeScript and Angular
 - Google Cloud account (required for full AI features)
 
@@ -338,7 +338,7 @@ ng generate service services/ai-grocery-assistant
 Replace the contents of `src/app/services/ai-grocery-assistant.ts`:
 
 ```typescript
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { GroceryItem, SmartSuggestion } from '../models/grocery.type';
 
@@ -358,16 +358,6 @@ export class AiGroceryAssistant {
       body: request,
     };
   });
-
-  constructor() {
-    effect(() => {
-      const request = this.apiRequest();
-      if (!request) {
-        return;
-      }
-      this.smartSuggestionResource.reload();
-    });
-  }
 
   readonly suggestions = computed(() => {
     const resourceData = this.smartSuggestionResource.value();
@@ -400,9 +390,8 @@ Let's understand exactly how data flows through our application when generating 
 ### Key Angular 20 Features in Action:
 
 1. **Signals**: `apiRequest` signal triggers automatic updates
-2. **Effects**: `effect()` watches signal changes and triggers HTTP requests
-3. **httpResource()**: Manages HTTP state with loading/error signals
-4. **Computed**: Automatically recalculates suggestions when data changes
+2. **httpResource()**: Manages HTTP state with loading/error signals. It automatically watches signal changes and triggers HTTP requests. Also, it cancels in-flight requests if a new request is made.
+3. **Computed**: Automatically recalculates suggestions when data changes
 
 ### Data Transformation:
 
@@ -739,6 +728,173 @@ export class App {
 
 ```
 
+<!-- .element: class="fragment" -->
+---
+
+Now, update the `app.css` file as follows:
+
+```css
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-header {
+  background: white;
+  border-bottom: 1px solid #e1e8ed;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4rem;
+}
+
+.nav-brand .brand-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.brand-icon {
+  margin-right: 0.5rem;
+  font-size: 1.8rem;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #5a6c7d;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: #2c3e50;
+  background: #f8f9fa;
+}
+
+.nav-link.active {
+  color: #3498db;
+  background: #e3f2fd;
+}
+
+.create-link {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white !important;
+  font-weight: 600;
+}
+
+.create-link:hover {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.create-link.active {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  color: white !important;
+}
+
+.main-content {
+  flex: 1;
+  background: #f8f9fa;
+}
+
+.app-footer {
+  background: #2c3e50;
+  color: white;
+  padding: 2rem 0;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.footer-link {
+  color: #bdc3c7;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 1rem;
+    flex-direction: column;
+    height: auto;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    gap: 1rem;
+  }
+
+  .nav-menu {
+    gap: 1rem;
+  }
+
+  .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .brand-text {
+    font-size: 1.2rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-links {
+    justify-content: center;
+  }
+}
+```
+<!-- .element: class="fragment" -->
 ---
 
 ## Step 8: Home Component with Angular 20 Features
@@ -3084,7 +3240,32 @@ Update the `home.css` file as:
 ```bash
 # Build for production
 npm run build
+```
 
+> Note: The build may fail for you. Due to an issue with 'ansi-color' package. To fix it, open the package.json and add this override:
+
+```json
+{
+  "name": "smart-grocery-assistant",
+  ... more fields ...
+  "overrides": {
+    "ansi-color": "npm:@myrotvorets/ansi-color"
+  },
+    ... more fields ...
+}
+```
+
+Then run `npm install` again.
+
+And then re-run the build command.
+
+```bash
+npm run build # should succeed now
+```
+
+### Serve the Application
+
+```bash
 # Start production server
 npm run serve:ssr
 ```
@@ -3291,19 +3472,6 @@ readonly suggestions = computed(() => {
 
 readonly isLoading = this.smartSuggestionsResource.isLoading;
 readonly error = this.smartSuggestionsResource.error;
-```
-
-### 7. **effect() for Reactive Side Effects**
-```typescript
-constructor() {
-  // 🎯 Angular 20 Feature: Effect to watch signal changes
-  effect(() => {
-    const request = this.apiRequest();
-    if (request) {
-      this.smartSuggestionsResource.reload();
-    }
-  });
-}
 ```
 
 ---
@@ -3551,3 +3719,11 @@ This project demonstrates the cutting-edge features of Angular 20 while building
 ---
 
 > 💡 **Pro Tip**: Star this tutorial and share it with fellow Angular developers to help them learn Angular 20's latest features!
+
+---
+
+## 🎥 Video Tutorial
+
+Watch the complete video tutorial on YouTube to see the step-by-step implementation of the Smart Grocery Assistant.
+
+[![Watch the tutorial on YouTube](https://img.youtube.com/vi/OTlnvCpOp00/0.jpg)](https://youtu.be/OTlnvCpOp00?si=HzmhVY-gD6NhKdH7)
